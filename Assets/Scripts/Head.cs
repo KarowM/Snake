@@ -7,9 +7,15 @@ using System;
 public class Head : MonoBehaviour {
 
     Vector2 direction = Vector2.right;
+    bool grow = false;
+
+    [SerializeField]
+    private GameObject tailPrefab;
+
+    List<Transform> tail = new List<Transform>();
 
     void Start() {
-        InvokeRepeating("Move", 0.2f, 0.2f);
+        InvokeRepeating("Move", 0.1f, 0.1f);
     }
 
     void Update() {
@@ -25,6 +31,25 @@ public class Head : MonoBehaviour {
     }
 
     void Move() {
+        Vector2 oldHeadPos = transform.position;
+
         transform.Translate(direction);
+
+        if (grow) {
+            GameObject newTail = Instantiate(tailPrefab, transform.position, Quaternion.identity);
+            tail.Insert(0, newTail.transform);
+            grow = false;
+        } else if (tail.Count > 0) {
+            tail.Last().position = oldHeadPos;
+            tail.Insert(0, tail.Last());
+            tail.RemoveAt(tail.Count - 1);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision) {
+        if (collision.name.StartsWith("Food")) {
+            grow = true;
+            Destroy(collision.gameObject);
+        }
     }
 }
